@@ -29,6 +29,8 @@ void CheatsOnFrame(void);  // cheats.c
 void RewindOnFrame(void);  // rewind.c
 int RewindHook(void);      // rewind.c
 void RewindOnStateJump(void);  // rewind.c
+void SecondScreen_RunFrameHook(void);       // second_screen.c
+void SecondScreen_ResetOutdoorTracking(void);  // second_screen.c
 
 static const char kTag[] = "moonpearl";
 
@@ -183,6 +185,12 @@ static void OnDie(const char *error) {
 static void OnFrame(void) {
   CheatsOnFrame();
   RewindOnFrame();
+  SecondScreen_RunFrameHook();
+}
+
+static void OnStateJump(void) {
+  RewindOnStateJump();
+  SecondScreen_ResetOutdoorTracking();
 }
 
 static FILE *OpenMsuTrack(const char *name) {
@@ -233,7 +241,7 @@ int SDL_main(int argc, char *argv[]) {
   ZeldaSetMsuOpenHook(OpenMsuTrack);
   ZeldaSetFrameHook(OnFrame);
   ZeldaSetRewindHook(RewindHook);
-  ZeldaSetStateJumpHook(RewindOnStateJump);
+  ZeldaSetStateJumpHook(OnStateJump);
   StartShaderCheck();
   int result = main(argc, argv);
   if (result != 0 && access(kLastErrorFile, F_OK) != 0) {

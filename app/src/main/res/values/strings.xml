@@ -291,4 +291,6 @@
     <string name="hold_speed_desc">For the on-screen fast-forward button and, if chosen below, L3. The menu sets the speed that stays.</string>
     <string name="l3_hold">L3 fast-forwards while held</string>
     <string name="l3_hold_desc">Off: each L3 press cycles the speed (1×, 2×, 3×, max).</string>
+    <string name="dual_screen">Dual screen companion</string>
+    <string name="dual_screen_desc">Show live map, dungeon floors, and touch inventory on a secondary display.</string>
 </resources>

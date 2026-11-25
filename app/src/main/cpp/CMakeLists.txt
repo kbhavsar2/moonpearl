@@ -49,6 +49,8 @@ add_library(main SHARED
   android_main.c
   cheats.c
   rewind.c
+  second_screen.c
+  second_screen_jni.c
   ${ZELDA3_SOURCES}
   ${ZELDA3_DIR}/third_party/gl_core/gl_core_3_1.c
   ${ZELDA3_DIR}/third_party/opus-1.3.1-stripped/opus_decoder_amalgam.c

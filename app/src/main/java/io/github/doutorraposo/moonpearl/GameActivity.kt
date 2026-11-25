@@ -3,12 +3,15 @@ package io.github.doutorraposo.moonpearl
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
+import android.hardware.display.DisplayManager
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.HandlerThread
 import android.os.Looper
 import android.os.Process
+import android.util.Log
+import android.view.Display
 import android.view.GestureDetector
 import android.view.InputDevice
 import android.view.KeyEvent
@@ -76,6 +79,20 @@ class GameActivity : SDLActivity() {
     private var doubleTap: GestureDetector? = null
     private val states by lazy { SaveStates(filesDir) }
     private val menuShot by lazy { File(cacheDir, "menu_shot.png") }
+    private var dualScreenEnabled = false
+    private var secondScreenHidden = false
+    private var secondScreen: SecondScreenPresentation? = null
+    private var displayManager: DisplayManager? = null
+    private val displayListener = object : DisplayManager.DisplayListener {
+        override fun onDisplayAdded(displayId: Int) = showSecondScreenIfPresent()
+        override fun onDisplayRemoved(displayId: Int) {
+            if (secondScreen?.display?.displayId == displayId) {
+                dismissSecondScreen()
+                showSecondScreenIfPresent()
+            }
+        }
+        override fun onDisplayChanged(displayId: Int) {}
+    }
 
     override fun attachBaseContext(newBase: Context) = super.attachBaseContext(AppLanguage.wrap(newBase))
 
@@ -112,6 +129,13 @@ class GameActivity : SDLActivity() {
         }
 
         val prefs = AppPrefs(this)
+        dualScreenEnabled = prefs.dualScreen
+        if (dualScreenEnabled) {
+            displayManager = (getSystemService(DISPLAY_SERVICE) as? DisplayManager)?.also {
+                it.registerDisplayListener(displayListener, null)
+            }
+            showSecondScreenIfPresent()
+        }
         // Upstream letterboxes through SDL_RenderSetLogicalSize; "overscan" makes that scale
         // to cover the screen instead. Read by SDL when main() creates the renderer.
         nativeSetenv("SDL_RENDER_LOGICAL_SIZE_MODE", if (prefs.fillScreen) "overscan" else "letterbox")
@@ -513,7 +537,55 @@ class GameActivity : SDLActivity() {
         touch?.padVisible = false
     }
 
+    override fun onStart() {
+        super.onStart()
+        secondScreenHidden = false
+        showSecondScreenIfPresent()
+    }
+
+    override fun onStop() {
+        secondScreenHidden = true
+        dismissSecondScreen()
+        super.onStop()
+    }
+
+    private fun showSecondScreenIfPresent() {
+        if (!dualScreenEnabled || secondScreen != null || secondScreenHidden || mBrokenLibraries) return
+        val dm = displayManager ?: return
+        val gameDisplayId = windowManager.defaultDisplay.displayId
+        val candidates = dm.getDisplays(DisplayManager.DISPLAY_CATEGORY_PRESENTATION)
+            .filter { it.displayId != gameDisplayId && it.displayId != Display.DEFAULT_DISPLAY }
+        for (display in candidates) {
+            try {
+                val presentation = SecondScreenPresentation(this, display)
+                presentation.setOnDismissListener { dialog ->
+                    if (secondScreen === dialog) {
+                        secondScreen = null
+                        if (!isFinishing && !secondScreenHidden) {
+                            window.decorView.post { showSecondScreenIfPresent() }
+                        }
+                    }
+                }
+                presentation.show()
+                secondScreen = presentation
+                Log.i("moonpearl", "Showing second screen on display ${display.displayId} (${display.name})")
+                return
+            } catch (e: RuntimeException) {
+                Log.w("moonpearl", "Display ${display.displayId} rejected Presentation", e)
+            }
+        }
+    }
+
+    private fun dismissSecondScreen() {
+        secondScreen?.let {
+            runCatching { it.dismiss() }
+            secondScreen = null
+        }
+    }
+
     override fun onDestroy() {
+        dismissSecondScreen()
+        displayManager?.unregisterDisplayListener(displayListener)
         super.onDestroy()
         // SDLActivity.onDestroy waits for main() to return (which writes the autosave),
         // so the process can go now; the launcher lives in the main process.

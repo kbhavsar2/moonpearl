@@ -208,8 +208,13 @@ private fun SettingsScreen(data: GameData, prefs: AppPrefs, onClose: () -> Unit)
 private fun DisplaySettings(ini: Ini, prefs: AppPrefs, edit: (Ini.() -> Unit) -> Unit, onImageFilter: () -> Unit) {
     val context = LocalContext.current
     var fillScreen by remember { mutableStateOf(prefs.fillScreen) }
+    var dualScreen by remember { mutableStateOf(prefs.dualScreen) }
     val screenRatio = remember { AspectRatio.screenRatio(context) }
     Section(null) {
+        SwitchRow(stringResource(R.string.dual_screen), dualScreen, stringResource(R.string.dual_screen_desc)) {
+            dualScreen = it
+            prefs.dualScreen = it
+        }
         SwitchRow(stringResource(R.string.fill_screen), fillScreen) {
             fillScreen = it
             prefs.fillScreen = it

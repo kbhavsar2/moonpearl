@@ -100,4 +100,9 @@ class AppPrefs(context: Context) {
     var touchOpacity: Float
         get() = prefs.getFloat("touch_opacity", 0.5f)
         set(value) { prefs.edit().putFloat("touch_opacity", value).commit() }
+
+    /** Companion map & touch inventory on a secondary presentation display (e.g. Retroid Pocket Duo). */
+    var dualScreen: Boolean
+        get() = prefs.getBoolean("dual_screen", true)
+        set(value) { prefs.edit().putBoolean("dual_screen", value).commit() }
 }

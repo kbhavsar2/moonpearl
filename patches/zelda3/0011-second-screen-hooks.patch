@@ -1,0 +1,75 @@
+diff --git a/src/load_gfx.c b/src/load_gfx.c
+index 1111111..2222222 100644
+--- a/src/load_gfx.c
++++ b/src/load_gfx.c
+@@ -843,6 +843,10 @@ void PrepTransAuxGfx() {
+   LoadBackgroundGraphics(&g_zenv.vram[0x3c00], mt[7], 0, &g_ram[0x14000]);
+ }
+ 
++const uint8 *GetSpriteTilesetPacks(int idx) {
++  return kSpriteTilesets[idx];
++}
++
+ void LoadDefaultGraphics() {  // 80e2d0
+   const uint8 *src = GetCompSpritePtr(0);
+ 
+diff --git a/src/load_gfx.h b/src/load_gfx.h
+index 1111111..2222222 100644
+--- a/src/load_gfx.h
++++ b/src/load_gfx.h
+@@ -51,6 +51,7 @@ void Do3To4Low16Bit(uint8 *dst, const uint8 *src, int num);
+ void LoadNewSpriteGFXSet();
+ void InitializeTilesets();
+ void LoadDefaultGraphics();
++const uint8 *GetSpriteTilesetPacks(int idx);
+ void Attract_LoadBG3GFX();
+ void Graphics_LoadChrHalfSlot();
+ void TransferFontToVRAM();
+diff --git a/src/messaging.c b/src/messaging.c
+index 1111111..2222222 100644
+--- a/src/messaging.c
++++ b/src/messaging.c
+@@ -233,6 +233,10 @@ uint8 GetOtherDungmapInfo(int count) {
+   return p[count];
+ }
+ 
++const uint16 *GetDungmapRoomShape(int idx) {
++  return &kDungMap_Tab23[idx * 4];
++}
++
+ void DungMap_4() {
+   BG2VOFS_copy2 += dungmap_var4;
+   dungmap_var5 -= dungmap_var4;
+diff --git a/src/messaging.h b/src/messaging.h
+index 1111111..2222222 100644
+--- a/src/messaging.h
++++ b/src/messaging.h
+@@ -3,6 +3,7 @@
+ 
+ const uint8 *GetDungmapFloorLayout();
+ uint8 GetOtherDungmapInfo(int count);
++const uint16 *GetDungmapRoomShape(int idx);
+ void DungMap_4();
+ void Module_Messaging_6();
+ void OverworldMap_SetupHdma();
+diff --git a/src/nmi.c b/src/nmi.c
+index 1111111..2222222 100644
+--- a/src/nmi.c
++++ b/src/nmi.c
+@@ -205,7 +205,14 @@ void NMI_Main() {
+   }
+ 
+   if (flag_update_hud_in_nmi) {
+-    memcpy(&g_zenv.vram[word_7E0219], hud_tile_indices_buffer, 165 * sizeof(uint16));
++    extern bool g_ss_hide_hud;
++    if (g_ss_hide_hud) {
++      uint16 *hud = &g_zenv.vram[word_7E0219];
++      for (int i = 0; i < 165; i++)
++        hud[i] = 0x207f;
++    } else {
++      memcpy(&g_zenv.vram[word_7E0219], hud_tile_indices_buffer, 165 * sizeof(uint16));
++    }
+   }
+ 
+   if (flag_update_cgram_in_nmi) {
+

@@ -37,7 +37,7 @@ android {
     ndkVersion = "29.0.14206865"
 
     defaultConfig {
-        applicationId = "io.github.doutorraposo.moonpearl"
+        applicationId = "io.github.kbhavsar2.moonpearl"
         minSdk = 26
         targetSdk = 36
         // Release builds pass these from the git tag (see .github/workflows/release.yml).
@@ -93,10 +93,10 @@ android {
         debug {
             // Installs next to the release build, so testing never wipes the real saves.
             applicationIdSuffix = ".debug"
-            resValue("string", "app_name", "Moon Pearl debug")
+            resValue("string", "app_name", "Moon Pearl DS debug")
         }
         release {
-            resValue("string", "app_name", "Moon Pearl")
+            resValue("string", "app_name", "Moon Pearl DS")
             signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
